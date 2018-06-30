@@ -6,6 +6,7 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -24,3 +25,5 @@ int socket_errno(SOCKET_IDENT ident);
 int socket_set_nonblock(SOCKET_IDENT ident);
 
 int socket_reuseaddr(SOCKET_IDENT ident, int optval);
+
+int socket_disable_nagle(SOCKET_IDENT ident, int nagle);

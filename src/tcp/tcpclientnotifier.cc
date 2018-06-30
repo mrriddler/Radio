@@ -17,7 +17,7 @@ TCPClientNotifier::TCPClientNotifier(EventLoop& loop,
     tag_(tag) {
         
     observer_ = observer;
-    verify_status_ = observer_ ? (observer_->OnShouldVerify(makePair()) ? kStatusNotPass : kStatusPass) : kStatusNoNeed;
+    verify_status_ = observer_ ? (observer_->OnShouldVerify(makeIdentityPair()) ? kStatusNotPass : kStatusPass) : kStatusNoNeed;
 }
 
 void TCPClientNotifier::attachObserver(TCPClientObserver *observer) {
@@ -34,55 +34,55 @@ TCPClientNotifier::TCPVerifyStatus TCPClientNotifier::currentVerifyStatus() cons
 
 void TCPClientNotifier::onCreate() {
     if (NULL != observer_) {
-        observer_->onCreate(makePair());
+        observer_->onCreate(makeIdentityPair());
     }
 }
 
 void TCPClientNotifier::onConnecting() {
     if (NULL != observer_) {
-        observer_->onConnecting(makePair());
+        observer_->onConnecting(makeIdentityPair());
     }
 }
 
 void TCPClientNotifier::onConnected(uint64_t rtt) {
     if (NULL != observer_) {
-        observer_->onConnected(makePair(), rtt);
+        observer_->onConnected(makeIdentityPair(), rtt);
     }
 }
 
 void TCPClientNotifier::onRecv(AutoBuffer& buffer, ssize_t size) {
     if (NULL != observer_) {
-        observer_->onRecv(makePair(), buffer, size);
+        observer_->onRecv(makeIdentityPair(), buffer, size);
     }
     
     if (kStatusPass == verify_status_) {
         return;
     }
     
-    verify_status_ = observer_ ? (observer_->onVerifyRecv(makePair(), buffer) ? kStatusPass : kStatusNotPass) : kStatusNoNeed;
+    verify_status_ = observer_ ? (observer_->onVerifyRecv(makeIdentityPair(), buffer) ? kStatusPass : kStatusNotPass) : kStatusNoNeed;
 }
 
 void TCPClientNotifier::onSend(AutoBuffer& buffer, ssize_t size) {
     if (NULL != observer_) {
-        observer_->onSend(makePair(), buffer, size);
+        observer_->onSend(makeIdentityPair(), buffer, size);
     }
     
     if (kStatusPass == verify_status_) {
         return;
     }
     
-    verify_status_ = observer_ ? (observer_->onVerifySend(makePair(), buffer) ? kStatusPass : kStatusNotPass) : kStatusNoNeed;
+    verify_status_ = observer_ ? (observer_->onVerifySend(makeIdentityPair(), buffer) ? kStatusPass : kStatusNotPass) : kStatusNoNeed;
 }
 
 void TCPClientNotifier::onClose(TCPCloseDirection direction) {
     if (NULL != observer_) {
-        observer_->onClose(makePair(), direction);
+        observer_->onClose(makeIdentityPair(), direction);
     }
 }
 
 void TCPClientNotifier::onLost(TCPClientStatus status, int _errno) {
     if (NULL != observer_) {
-        observer_->onLost(makePair(), status, _errno);
+        observer_->onLost(makeIdentityPair(), status, _errno);
     }
 }
 
@@ -102,8 +102,7 @@ int32_t TCPClientNotifier::recvOrSendAbsTimeout() const {
     return (int32_t)(std::max(1000, std::min(6 * connectRTT(), connectAbsTimeout() - connectRTT())));
 }
 
-TCPClientIdentityPair TCPClientNotifier::makePair() {
-    //TCPClientIdentityPair ret = std::pair<const sockaddr&, uint32_t>(addr_.addr(), tag_);
+TCPClientIdentityPair TCPClientNotifier::makeIdentityPair() {
     TCPClientIdentityPair ret = std::make_pair(addr_.addr(), tag_);
     return ret;
 }

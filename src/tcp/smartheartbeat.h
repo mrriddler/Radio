@@ -7,26 +7,45 @@
 #include "tcpclientnotifier.h"
 
 class EventLoop;
-class SmartHeartBeatMainTimer;
 class SmartHeartBeat;
 
-class SmartHeartBeatWaitTimer : public TimerEventSource {
+class SmartHeartBeatStrategy {
 public:
-    SmartHeartBeatWaitTimer(EventLoop& loop,
-                            SmartHeartBeat *heartbeat,
-                            SmartHeartBeatMainTimer *main_timer);
-    void processEvent(int ident, int mask);
+    void start();
+    void end();
+    
+    void recvHeartResponse();
+    uint64_t stepOnInterval();
+    uint64_t getCurInterval() const;
 private:
-    SmartHeartBeat *heartbeat_;
-    SmartHeartBeatMainTimer *main_timer_;
+    bool probe(bool success);
+    void adjustOnSuccess();
+    void adjustOnFailure();
+    void moveupStep();
+    void revertStep();
+    
+    bool is_waiting_heart_response_;
+    bool is_stable_;
+    
+    uint64_t probe_count_;
+    
+    uint64_t continuous_success_count_;
+    uint64_t continuous_failure_count_;
+    
+    uint64_t cur_interval_;
 };
 
-class SmartHeartBeatMainTimer : public TimerEventSource {
+class SmartHeartBeatTimer : public TimerEventSource {
 public:
-    SmartHeartBeatMainTimer(EventLoop& loop, SmartHeartBeat *heartbeat);
+    SmartHeartBeatTimer(EventLoop& loop,
+                        SmartHeartBeat *heartbeat,
+                        SmartHeartBeatStrategy *strategy);
+    
     void processEvent(int ident, int mask);
+    void processError();
 private:
     SmartHeartBeat *heartbeat_;
+    SmartHeartBeatStrategy *strategy_;
 };
 
 class SmartHeartBeatDelegate {
@@ -41,21 +60,15 @@ public:
     ~SmartHeartBeat();
     
     void start();
-    void cancel();
+    void end();
     
-    void onRecv();
-    void onSend();
+    void recvHeartBeatPack();
     
     void sendHeartBeatPack();
     void timeout();
     
-    int64_t waitInterval(int64_t pre_wait_interval) const;
-    int64_t mainInterval(int64_t pre_wait_interval) const;
 private:
     SmartHeartBeatDelegate *delegate_;
-    
-    uint32_t success_count_;
-    
-    SmartHeartBeatWaitTimer *wait_timer_;
-    SmartHeartBeatMainTimer *main_timer_;
+    SmartHeartBeatStrategy *strategy_;
+    SmartHeartBeatTimer *timer_;
 };

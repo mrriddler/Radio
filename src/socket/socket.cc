@@ -28,3 +28,7 @@ int socket_set_nonblock(SOCKET_IDENT ident) {
 int socket_reuseaddr(SOCKET_IDENT ident, int optval) {
     return setsockopt(ident, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval, sizeof(int));
 }
+
+int socket_disable_nagle(SOCKET_IDENT ident, int nagle) {
+    return setsockopt(ident, IPPROTO_TCP, TCP_NODELAY, (char *)&nagle, sizeof(nagle));
+}

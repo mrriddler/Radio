@@ -43,6 +43,7 @@ void TCPClient::connect() {
     onCreate();
     
     ident_ = socket(addr_.addr().sa_family, SOCK_STREAM, IPPROTO_TCP);
+    socket_disable_nagle(ident_, 1);
     errno_ = 0;
     
     status_ = kStatusStart;

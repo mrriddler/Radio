@@ -30,6 +30,7 @@ void TCPServer::listen() {
     onCreate();
 
     ident_ = socket(AF_INET, SOCK_STREAM, 0);
+    socket_disable_nagle(ident_, 1);
     errno_ = 0;
     
     status_ = kStatusStart;

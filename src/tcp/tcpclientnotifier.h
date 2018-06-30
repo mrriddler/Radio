@@ -5,7 +5,7 @@
 //
 
 #include "tcpclient.h"
-#include "tcpconfig.h"
+#include "config.h"
 
 typedef std::pair<const sockaddr&, uint32_t> TCPClientIdentityPair;
 
@@ -61,5 +61,5 @@ private:
     TCPClientObserver *observer_;
     TCPVerifyStatus verify_status_;
     
-    TCPClientIdentityPair makePair();
+    TCPClientIdentityPair makeIdentityPair();
 };

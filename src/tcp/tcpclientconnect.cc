@@ -6,7 +6,7 @@
 
 #include "tcpclientconnect.h"
 
-TCPClientConnect::TCPClientConnect(EventLoop& loop, bool reusable):loop_(loop), reusable_(reusable) {}
+TCPClientConnect::TCPClientConnect(EventLoop& loop, bool reusable):loop_(loop), reusable_(reusable), heartbeat_(new SmartHeartBeat(loop_, this)) {}
 
 TCPClientConnect::~TCPClientConnect() {
     if (NULL != tcp_) {
@@ -15,7 +15,6 @@ TCPClientConnect::~TCPClientConnect() {
     }
     
     if (reusable_ && NULL != heartbeat_) {
-        heartbeat_->cancel();
         delete heartbeat_;
         heartbeat_ = NULL;
     }
@@ -37,8 +36,8 @@ void TCPClientConnect::connect(std::vector<SocketAddress>& addrs) {
     ConnectEstablisher establisher = ConnectEstablisher();
     tcp_ = establisher.race(loop_, addrs, this);
     
-    if (reusable_ && NULL != tcp_) {
-        heartbeat_ = new SmartHeartBeat(loop_, this);
+    if (reusable_ && NULL != heartbeat_) {
+        heartbeat_->start();
     }
 }
 
@@ -51,9 +50,7 @@ void TCPClientConnect::close() {
     tcp_->close();
 
     if (reusable_ && NULL != heartbeat_) {
-        heartbeat_->cancel();
-        delete heartbeat_;
-        heartbeat_ = NULL;
+        heartbeat_->end();
     }
 }
 
@@ -79,19 +76,11 @@ void TCPClientConnect::onRecv(TCPClientIdentityPair pair, AutoBuffer& buffer, ss
     if (NULL != observer_) {
         observer_->onRecv(buffer, size);
     }
-    
-    if (reusable_ && NULL != heartbeat_) {
-        heartbeat_->onRecv();
-    }
 }
 
 void TCPClientConnect::onSend(TCPClientIdentityPair pair, AutoBuffer& buffer, ssize_t size) {
     if (NULL != observer_) {
         observer_->onSend(buffer, size);
-    }
-    
-    if (reusable_ && NULL != heartbeat_) {
-        heartbeat_->onSend();
     }
 }
 

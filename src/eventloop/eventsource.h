@@ -35,7 +35,7 @@ public:
     TimerEventSource(EventLoop& loop):EventSource(loop) { ident_ = 1; };
     ~TimerEventSource() { if (kStatusRun == status_) detach(); }
     
-    virtual void run(uint64_t interval) {
+    void run(uint64_t interval) {
         if (kStatusRun == status_) {
             return;
         }
@@ -48,7 +48,7 @@ public:
         attach();
     };
     
-    virtual void cancel() {
+    void cancel() {
         if (kStatusRun != status_) {
             return;
         }
